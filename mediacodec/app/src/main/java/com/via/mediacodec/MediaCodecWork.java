@@ -1,108 +1,62 @@
 package com.via.mediacodec;
 
-
-import android.app.Activity;
-import android.graphics.ImageFormat;
-import android.hardware.Camera;
-import android.hardware.camera2.CameraCaptureSession;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 import android.media.MediaFormat;
-import android.util.Log;
+import android.os.AsyncTask;
 import android.view.SurfaceView;
-import android.widget.Toast;
 
 import java.io.IOException;
 
 /**
  * Created by NedHuang on 2016/8/10.
  */
-public class MediaCodecWork implements Camera.PreviewCallback {
+public class MediaCodecWork extends AsyncTask<byte[], Integer, Integer> {
 
     private final static String TAG = "MediaCodecWork";
-    private Activity mAct = null;
-    private Camera mCamera;
-    private Camera.CameraInfo mCameraInfo;
-    private CameraCaptureSession mCameraCaptureSession;
-    private Camera.Parameters mParameters;
     private final static int MAX_SURFACEVIEW_NUMBER = 2;
     private final static String mMime = "video/avc";
-
-    private SurfaceView[] mSurfaceView = new SurfaceView[MAX_SURFACEVIEW_NUMBER];
-
     private MediaCodec mEncoder = null, mDecoder = null;
     private MediaFormat mEncoderFormat = null, mDecoderFormat = null;
 
-    public MediaCodecWork(Activity a, SurfaceView[] s) {
-        mAct = a;
-        mCamera = Camera.open();
-        mCameraInfo = new Camera.CameraInfo();
-        mSurfaceView[0] = s[0];
-        mSurfaceView[1] = s[1];
-    }
-
-    public void release() {
-        mCamera.stopPreview();
-        mCamera.release();
-        mCamera = null;
-    }
-
-    public void setCameraPreView() {
-        try {
-            mCamera.setPreviewDisplay(mSurfaceView[0].getHolder());
-
-            Camera.getCameraInfo(0, mCameraInfo);
-//            int rotation = mAct.getWindowManager().getDefaultDisplay().getRotation();
-//            int degrees = 0;
-//            switch (rotation) {
-//                case Surface.ROTATION_0:
-//                    degrees = 0;
-//                    break;
-//                case Surface.ROTATION_90:
-//                    degrees = 90;
-//                    break;
-//                case Surface.ROTATION_180:
-//                    degrees = 180;
-//                    break;
-//                case Surface.ROTATION_270:
-//                    degrees = 270;
-//                    break;
-//            }
-//            int result = (mCameraInfo.orientation - degrees + 360) % 360;
-//            mCamera.setDisplayOrientation(result);
-
-            mCamera.startPreview();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    @Override
+    protected Integer doInBackground(byte[]... params) {
+        return null;
     }
 
     @Override
-    public void onPreviewFrame(byte[] bytes, Camera camera) {
-        mParameters = camera.getParameters();
-        int format = mParameters.getPreviewFormat();
-        if (format == ImageFormat.NV21 || format == ImageFormat.YUY2 || format == ImageFormat.NV16) {
-            int w = mParameters.getPreviewSize().width;
-            int h = mParameters.getPreviewSize().height;
-
-            Toast.makeText(mAct, "onPreviewFrame: preview format: " + format + " size: " + bytes.length + " w: " + w + " h: " + h, Toast.LENGTH_SHORT).show();
-
-            // Handle preview frame work.
-
-            if (mEncoder == null) {
-                setEncoder(w, h);
-            }
-
-            if (mDecoder == null) {
-                setDecoder(w, h);
-            }
-
-
-        }
+    protected void onPostExecute(Integer integer) {
+        super.onPostExecute(integer);
     }
 
-    private void setEncoder(int w, int h) {
+    @Override
+    protected void onProgressUpdate(Integer... values) {
+        super.onProgressUpdate(values);
+    }
+
+    private void qq() {
+//        int rotation = mAct.getWindowManager().getDefaultDisplay().getRotation();
+//        int degrees = 0;
+//        switch (rotation) {
+//            case Surface.ROTATION_0:
+//                degrees = 0;
+//                break;
+//            case Surface.ROTATION_90:
+//                degrees = 90;
+//                break;
+//            case Surface.ROTATION_180:
+//                degrees = 180;
+//                break;
+//            case Surface.ROTATION_270:
+//                degrees = 270;
+//                break;
+//        }
+//        int result = (mCameraInfo.orientation - degrees + 360) % 360;
+//        mCamera.setDisplayOrientation(90);
+    }
+
+    protected void setEncoder(int w, int h) {
         try {
             int colorFormat = selectColorFormat(selectCodec(mMime), mMime);
             mEncoder = MediaCodec.createDecoderByType(mMime);
@@ -162,11 +116,12 @@ public class MediaCodecWork implements Camera.PreviewCallback {
         }
     }
 
-    private void setDecoder(int w, int h) {
+    protected void setDecoder(int w, int h, SurfaceView surfaceView) {
         try {
             mDecoderFormat = MediaFormat.createVideoFormat(mMime, w, h);
             mDecoder = MediaCodec.createDecoderByType(mMime);
-            mDecoder.configure(mDecoderFormat, mSurfaceView[1].getHolder().getSurface(), null, 0);
+            mDecoder.configure(mDecoderFormat, surfaceView.getHolder().getSurface(), null, 0);
+            mDecoder.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
